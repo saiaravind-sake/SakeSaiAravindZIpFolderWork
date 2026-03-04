@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aravind Project - Selective ZIP Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #0f0f17 0%, #0a0a12 100%);
+      color: #e2e8f0;
+    }
+    .glass {
+      background: rgba(30, 30, 50, 0.58);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(100, 116, 139, 0.20);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.55);
+    }
+    .check-glow:checked {
+      box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.40);
+    }
+    .header-gradient {
+      background: linear-gradient(to right, #6366f1, #a855f7, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-6 md:p-10 font-sans antialiased">
+
+  <!-- ──── PROJECT TITLE (Top of Page) ──── -->
+  <header class="w-full max-w-5xl mb-10 text-center">
+    <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight header-gradient drop-shadow-lg">
+      Aravind Project
+    </h1>
+    <p class="mt-3 text-xl text-slate-400 font-medium">
+      Smart Selective PDF Downloader from ZIP Archives
+    </p>
+  </header>
+
+  <!-- Main Content Card -->
+  <div class="w-full max-w-lg glass rounded-3xl overflow-hidden text-center px-8 py-12">
+    <div class="mx-auto w-24 h-24 bg-gradient-to-br from-indigo-600 to-purple-700 rounded-2xl flex items-center justify-center shadow-2xl mb-8 transform hover:scale-105 transition-transform duration-400">
+      <i class="fa-solid fa-file-zipper text-white text-5xl drop-shadow-lg"></i>
+    </div>
+
+    <h2 class="text-3xl font-bold tracking-tight mb-3">
+      Quarterly_Report_2025.zip
+    </h2>
+    <p class="text-slate-400 mb-10">4 documents • 8.2 MB total</p>
+
+    <button 
+      onclick="showModal()"
+      class="group relative inline-flex items-center gap-3 bg-gradient-to-r from-indigo-600 to-purple-600 px-9 py-5 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-500/40 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+    >
+      <i class="fa-solid fa-list-check text-lg"></i>
+      Select Files to Download
+    </button>
+  </div>
+
+  <!-- ====================== MODAL ====================== -->
+  <div id="modal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300">
+    <div id="modalContent" class="glass rounded-3xl w-full max-w-lg overflow-hidden scale-95 opacity-0 transition-all duration-300">
+
+      <!-- Modal Header -->
+      <div class="px-8 pt-8 pb-5 border-b border-slate-700/50 flex items-center justify-between">
+        <div>
+          <h2 class="text-2xl font-bold tracking-tight">Choose Reports</h2>
+          <p class="text-slate-400 mt-1 text-sm">Select one or multiple PDFs</p>
+        </div>
+        <button onclick="hideModal()" class="text-slate-400 hover:text-slate-200 text-3xl transition-colors p-2 rounded-full hover:bg-slate-800/50">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- File List -->
+      <div class="px-5 py-6 max-h-[65vh] overflow-y-auto space-y-2" id="fileList">
+        <!-- Files injected here -->
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="px-8 py-6 bg-black/35 border-t border-slate-700/50 flex items-center justify-between gap-4 flex-wrap">
+        <label class="flex items-center gap-3 cursor-pointer group">
+          <input type="checkbox" id="selectAll" class="w-5 h-5 rounded border-slate-600 text-indigo-500 focus:ring-indigo-500/40 bg-slate-800">
+          <span class="text-slate-300 group-hover:text-indigo-300 transition-colors">Select all</span>
+        </label>
+
+        <div class="flex gap-4">
+          <button 
+            onclick="hideModal()"
+            class="px-7 py-3.5 rounded-2xl bg-slate-800/70 border border-slate-700 text-slate-300 font-medium hover:bg-slate-700/80 hover:text-white transition-all"
+          >
+            Cancel
+          </button>
+          
+          <button 
+            onclick="downloadSelected()"
+            id="downloadBtn"
+            disabled
+            class="group relative inline-flex items-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl hover:from-emerald-700 hover:to-teal-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+          >
+            <i class="fa-solid fa-download"></i>
+            Download Selected
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const files = [
+      { name: "January_Report.pdf",   size: "2.4 MB" },
+      { name: "February_Report.pdf",  size: "3.1 MB" },
+      { name: "March_Report.pdf",     size: "1.8 MB"  },
+      { name: "Summary_&_Charts.pdf", size: "856 KB"  }
+    ];
+
+    function showModal() {
+      renderFileList();
+      const modal = document.getElementById('modal');
+      const content = document.getElementById('modalContent');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        content.classList.remove('scale-95', 'opacity-0');
+        content.classList.add('scale-100', 'opacity-100');
+      }, 10);
+    }
+
+    function hideModal() {
+      const content = document.getElementById('modalContent');
+      content.classList.remove('scale-100', 'opacity-100');
+      content.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => document.getElementById('modal').classList.add('hidden'), 300);
+    }
+
+    function renderFileList() {
+      const container = document.getElementById('fileList');
+      container.innerHTML = '';
+
+      files.forEach((file, i) => {
+        const label = document.createElement('label');
+        label.className = 'group flex items-center gap-5 p-5 rounded-2xl hover:bg-slate-800/50 cursor-pointer transition-all duration-200 border border-transparent hover:border-slate-700/70';
+        label.innerHTML = `
+          <input type="checkbox" class="file-check w-6 h-6 rounded-md border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500/40 check-glow transition-shadow" data-index="${i}">
+          <div class="flex-1 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-600/80 to-pink-700/80 flex items-center justify-center text-white shadow-md flex-shrink-0">
+              <i class="fa-solid fa-file-pdf text-xl"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-slate-100 group-hover:text-indigo-300 transition-colors truncate">${file.name}</div>
+              <div class="text-sm text-slate-500 mt-0.5">${file.size}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(label);
+      });
+
+      document.getElementById('selectAll').onchange = e => {
+        document.querySelectorAll('.file-check').forEach(chk => chk.checked = e.target.checked);
+        updateDownloadButton();
+      };
+
+      document.querySelectorAll('.file-check').forEach(chk => chk.onchange = updateDownloadButton);
+
+      updateDownloadButton();
+    }
+
+    function updateDownloadButton() {
+      const checked = document.querySelectorAll('.file-check:checked').length;
+      const btn = document.getElementById('downloadBtn');
+      const all = document.getElementById('selectAll');
+
+      btn.disabled = checked === 0;
+      all.checked = checked === files.length && checked > 0;
+      all.indeterminate = checked > 0 && checked < files.length;
+    }
+
+    function downloadSelected() {
+      const selected = [];
+      document.querySelectorAll('.file-check:checked').forEach(chk => {
+        const idx = chk.dataset.index;
+        selected.push(files[idx].name);
+      });
+
+      if (selected.length === 0) return;
+
+      const text = selected.length === 1 
+        ? `Downloading single file: ${selected[0]}`
+        : `Creating mini-ZIP with ${selected.length} files:\n${selected.join('\n')}`;
+
+      alert(text + '\n\n(In real backend: stream PDF or create ZIP on-the-fly)');
+      hideModal();
+    }
+
+    document.getElementById('modal').onclick = e => {
+      if (e.target === e.currentTarget) hideModal();
+    };
+  </script>
+</body>
+</html>
